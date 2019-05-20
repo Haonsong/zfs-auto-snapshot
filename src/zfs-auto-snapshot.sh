@@ -20,7 +20,7 @@
 #
 
 # Set the field separator to a literal tab and newline.
-IFS="	
+IFS="
 "
 
 # Set default program options.
@@ -32,9 +32,9 @@ opt_event='-'
 opt_fast_zfs_list=''
 opt_keep=''
 opt_label=''
-opt_prefix='zfs-auto-snap'
+opt_prefix='auto_snap'
 opt_recursive=''
-opt_sep='_'
+opt_sep=':'
 opt_setauto=''
 opt_syslog=''
 opt_skip_scrub=''
@@ -75,7 +75,7 @@ print_usage ()
   -v, --verbose      Print info messages.
       --destroy-only Only destroy older snapshots, do not create new ones.
       name           Filesystem and volume names, or '//' for all ZFS datasets.
-" 
+"
 }
 
 
@@ -191,7 +191,7 @@ do_snapshots () # properties, flags, snapname, oldglob, [targets...]
 			else
 				WARNING_COUNT=$(( $WARNING_COUNT + 1 ))
 				continue
-			fi 
+			fi
 		fi
 
 		# Retain at most $opt_keep number of old snapshots of this filesystem,
@@ -208,7 +208,7 @@ do_snapshots () # properties, flags, snapname, oldglob, [targets...]
 				KEEP=$(( $KEEP - 1 ))
 				if [ "$KEEP" -le '0' ]
 				then
-					if do_run "zfs destroy -d $FLAGS '$jj'" 
+					if do_run "zfs destroy -d $FLAGS '$jj'"
 					then
 						DESTRUCTION_COUNT=$(( $DESTRUCTION_COUNT + 1 ))
 					else
@@ -319,7 +319,7 @@ do
 			shift 1
 			;;
 		(--sep)
-			case "$2" in 
+			case "$2" in
 				([[:alnum:]_.:\ -])
 					:
 					;;
@@ -367,7 +367,7 @@ if [ "$#" -eq '0' ]
 then
 	print_log error "The filesystem argument list is empty."
 	exit 133
-fi 
+fi
 
 # Count the number of times '//' appears on the command line.
 SLASHIES='0'
@@ -425,7 +425,7 @@ done
 ZPOOLS_SCRUBBING=$(echo "$ZPOOL_STATUS" | awk -F ': ' \
   '$1 ~ /^ *pool$/ { pool = $2 } ; \
    $1 ~ /^ *scan$/ && $2 ~ /scrub in progress/ { print pool }' \
-  | sort ) 
+  | sort )
 
 # Get a list of pools that cannot do a snapshot.
 ZPOOLS_NOTREADY=$(echo "$ZPOOL_STATUS" | awk -F ': ' \
@@ -566,13 +566,14 @@ SNAPPROP="-o com.sun:auto-snapshot-desc='$opt_event'"
 
 # ISO style date; fifteen characters: YYYY-MM-DD-HHMM
 # On Solaris %H%M expands to 12h34.
-DATE=$(date --utc +%F-%H%M)
+# DATE=$(date --utc +%F-%H%M)
+DATE=$(date +%d-%b)
 
 # The snapshot name after the @ symbol.
-SNAPNAME="${opt_prefix:+$opt_prefix$opt_sep}${opt_label:+$opt_label}-$DATE"
+SNAPNAME="${opt_prefix:+$opt_prefix$opt_sep}$DATE${opt_label:+$opt_sep$opt_label}"
 
 # The expression for matching old snapshots.  -YYYY-MM-DD-HHMM
-SNAPGLOB="${opt_prefix:+$opt_prefix$opt_sep}${opt_label:+$opt_label}-???????????????"
+SNAPGLOB="${opt_prefix:+$opt_prefix$opt_sep}$DATE${opt_label:+$opt_label}"
 
 if [ -n "$opt_do_snapshots" ]
 then
