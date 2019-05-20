@@ -20,7 +20,7 @@
 #
 
 # Set the field separator to a literal tab and newline.
-IFS="
+IFS="	
 "
 
 # Set default program options.
