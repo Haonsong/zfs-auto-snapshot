@@ -32,9 +32,9 @@ opt_event='-'
 opt_fast_zfs_list=''
 opt_keep=''
 opt_label=''
-opt_prefix='auto_snap'
+opt_prefix='zfs-auto-snap'
 opt_recursive=''
-opt_sep=':'
+opt_sep='_'
 opt_setauto=''
 opt_syslog=''
 opt_skip_scrub=''
@@ -286,7 +286,7 @@ do
 			shift 2
 			;;
 		(-l|--label)
-			opt_label="$2"
+			opt_label="$opt_sep$2"
 			shift 2
 			;;
 		(-m|--min-size)
@@ -564,16 +564,18 @@ done
 # because the SUNW program does. The dash character is the default.
 SNAPPROP="-o com.sun:auto-snapshot-desc='$opt_event'"
 
-# ISO style date; fifteen characters: YYYY-MM-DD-HHMM
+# ISO style date; fifteen characters: YYYY-MM-DD-HHMMSS
 # On Solaris %H%M expands to 12h34.
 # DATE=$(date --utc +%F-%H%M)
-DATE=$(date +%d-%b)
+DATE=$opt_sep$(date +%Y-%b-%d-%H%M%S)
+DATE_MASK=$opt_sep"?????????????????"
+
 
 # The snapshot name after the @ symbol.
-SNAPNAME="${opt_prefix:+$opt_prefix$opt_sep}$DATE${opt_label:+$opt_sep$opt_label}"
+SNAPNAME="${opt_prefix:+$opt_prefix}${opt_label:+$opt_label}$DATE"
 
-# The expression for matching old snapshots.  -YYYY-MM-DD-HHMM
-SNAPGLOB="${opt_prefix:+$opt_prefix$opt_sep}$DATE${opt_label:+$opt_label}"
+# The expression for matching old snapshots.  -YYYY-MM-DD-HHMMSS
+SNAPGLOB="${opt_prefix:+$opt_prefix}${opt_label:+$opt_label}$DATE_MASK"
 
 if [ -n "$opt_do_snapshots" ]
 then
